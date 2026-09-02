@@ -11,9 +11,15 @@ from fastapi import FastAPI
 
 app = FastAPI(title="Ticket Triage Agents")
 
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
 @app.get("/")
 def root():
-    return {"message": "Ticket Triage Agents is running"}
+    return FileResponse("static/index.html")
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 @app.post("/triage")
 def process_ticket(ticket: TicketInput):
@@ -48,7 +54,7 @@ def process_ticket(ticket: TicketInput):
             priority=triage_result.priority,
             category=triage_result.category,
         )
-        routing_raw["channel"] = notified_via 
+        routing_raw["channel"] = notified_via
         routing_result = routing_raw
 
     return {
