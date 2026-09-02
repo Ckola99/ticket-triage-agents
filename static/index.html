@@ -27,8 +27,37 @@ async function submitTicket() {
     body: JSON.stringify({ text })
   });
   const data = await res.json();
-  document.getElementById('results').innerHTML =
-    '<div class="card"><pre>' + JSON.stringify(data, null, 2) + '</pre></div>';
+  const t = data.triage;
+  const a = data.audit;
+  const r = data.routing;
+
+  let html = `
+    <div class="card">
+      <h3>${t.priority} — ${t.category}</h3>
+      <p><em>${t.priority_reasoning}</em></p>
+      <p>SLA: respond in ${t.sla_response_minutes} min, resolve in ${t.sla_resolve_hours} hr</p>
+      <p><strong>Drafted reply:</strong> ${t.drafted_reply}</p>
+    </div>
+    <div class="card">
+      <h3>${a.approved ? '✅ Approved' : '❌ Rejected'}</h3>
+      <ul>${a.reasons.map(x => '<li>' + x + '</li>').join('')}</ul>
+      ${data.retried ? '<p><em>Retried after initial rejection.</em></p>' : ''}
+      ${data.flagged ? '<p><strong>⚠ Flagged for human review.</strong></p>' : ''}
+    </div>
+  `;
+
+  if (r) {
+    html += `
+      <div class="card">
+        <h3>Routed</h3>
+        <p>Team: <strong>${r.team}</strong></p>
+        <p>Assigned to: <strong>${r.assigned}</strong></p>
+        <p>Sent to: <strong>${r.channel === 'slack' ? '📣 Slack alert sent' : 'No notification'}</strong></p>
+      </div>
+    `;
+  }
+
+  document.getElementById('results').innerHTML = html;
 }
 </script>
 </body>
